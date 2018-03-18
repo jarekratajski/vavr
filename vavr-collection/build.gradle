@@ -1,0 +1,4 @@
+ext.moduleName = 'io.vavr.collection'
+dependencies {
+    compile project(':vavr-control')
+}
