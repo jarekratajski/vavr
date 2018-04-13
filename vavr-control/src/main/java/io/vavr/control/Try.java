@@ -114,6 +114,53 @@ public abstract class Try<T> implements Iterable<T>, Serializable {
     }
 
     /**
+     * Provides try's finally behavior no matter what the result of the operation is.
+     *
+     * @param runnable A runnable
+     * @return this {@code Try}.
+     * @throws NullPointerException if {@code runnable} is null
+     */
+    public Try<T> andFinally(CheckedRunnable runnable) {
+        Objects.requireNonNull(runnable, "runnable is null");
+        try {
+            runnable.run();
+            return this;
+        } catch (Throwable t) {
+            return failure(t);
+        }
+    }
+
+    /**
+     * Passes the result to the given {@code consumer} if this is a {@code Success}.
+     * <p>
+     * The main use case is chaining checked functions using method references:
+     *
+     * <pre>
+     * <code>
+     * Try.of(() -&gt; 100)
+     *    .andThen(i -&gt; System.out.println(i));
+     *
+     * </code>
+     * </pre>
+     *
+     * @param consumer A checked consumer
+     * @return this {@code Try} if this is a {@code Failure} or the consumer succeeded, otherwise the
+     * {@code Failure} of the consumption.
+     * @throws NullPointerException if {@code consumer} is null
+     */
+    public  Try<T> andThen(CheckedConsumer<? super T> consumer) {
+        Objects.requireNonNull(consumer, "consumer is null");
+        if (isSuccess()) {
+            try {
+                consumer.accept(get());
+            } catch (Throwable t) {
+                return failure(t);
+            }
+        }
+        return this;
+    }
+
+    /**
      * Returns {@code this} if this is a Failure or this is a Success and the value satisfies the predicate.
      * <p>
      * Returns a new Failure, if this is a Success and the value does not satisfy the Predicate or an exception
